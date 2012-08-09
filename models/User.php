@@ -15,6 +15,7 @@ class User extends \li3b_core\models\BaseModel {
 
 	protected $_meta = array(
 		'locked' => true,
+		'connection' => 'li3b_users'
 		//'source' => 'users'
 	);
 	
