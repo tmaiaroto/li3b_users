@@ -36,6 +36,7 @@
  * @see lithium\core\Environment
  */
 use lithium\data\Connections;
+use lithium\core\Libraries;
 
 /**
  * Uncomment this configuration to use MongoDB as your default database.
@@ -68,24 +69,31 @@ use lithium\data\Connections;
 // 	'database' => 'my_app',
 // 	'encoding' => 'UTF-8'
 // ));
+$config = Libraries::get('li3b_users');
+$host = isset($config['connection']['host']) ? $config['connection']['host']:'localhost';
+$database = isset($config['connection']['database']) ? $config['connection']['database']:'li3bootstrap';
+$port = isset($config['connection']['port']) ? $config['connection']['port']:27017;
 
 Connections::add(
-	'default', array(
+	'li3b_users', array(
 		'production' => array(
 			'type' => 'MongoDb',
-			'host' => 'localhost',
-			'database' => 'li3bootstrap'
+			'host' => $host,
+			'port' => $port,
+			'database' => $database
 		),
 		'development' => array(
 			'type' => 'MongoDb',
-			'host' => 'localhost',
-			'database' => 'li3bootstrap_dev'
+			'host' => $host,
+			'port' => $port,
+			'database' => $database . '_dev'
 		),
 		'test' => array(
 			'type' => 'database', 
 			'adapter' => 'MongoDb', 
-			'database' => 'li3bootstrap_test', 
-			'host' => 'localhost'
+			'database' => $database , '_test', 
+			'host' => $host,
+			'port' => $port
 		)
 	)
 );
