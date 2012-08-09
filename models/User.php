@@ -8,6 +8,7 @@ use lithium\util\Inflector;
 use lithium\security\Auth;
 use lithium\security\Password;
 use lithium\data\entity\Document;
+use lithium\core\Libraries;
 use \MongoId;
 use \Exception;
 
@@ -15,8 +16,8 @@ class User extends \li3b_core\models\BaseModel {
 
 	protected $_meta = array(
 		'locked' => true,
-		'connection' => 'li3b_users'
-		//'source' => 'users'
+		'connection' => 'li3b_users',
+		'source' => 'li3b_users.users'
 	);
 	
 	protected $_schema = array(
@@ -103,7 +104,31 @@ class User extends \li3b_core\models\BaseModel {
 			return true;
 		});
 		
+		
 		parent::__init();
+		
+		/*
+		 * If told to ues a specific connection, do so.
+		 * Otherwise, use the default li3b_users connection.
+		 * Note: This model requires MongoDB.
+		 * Also note: This must be called AFTER parent::__init()
+		 * 
+		 * This is useful if the main application also uses MongoDB
+		 * and wishes everything to use the same database...Be it
+		 * local or on something like MongoLab or wherever.
+		 * 
+		 * In fact, when gluing together libraries, one may choose
+		 * all libraries that use the same database and kinda go
+		 * with each other. That way it'll end up looking like a single
+		 * cohesive application from the database's point of view.
+		 * Of course the it's difficult to avoid conflicts in the MongoDB
+		 * collection names. In this case, this model is prefixing the
+		 * library name to the collection in order to ensure there are
+		 * no conflicts.
+		 */
+		$libConfig = Libraries::get('li3b_users');
+		$connection = isset($libConfig['useConnection']) ? $libConfig['useConnection']:'li3b_users';
+		static::meta('connection', $connection);
 	}
 	
 	/**

@@ -400,7 +400,7 @@ class UsersController extends \lithium\action\Controller {
 	 * Logs a user out.
 	*/
 	public function logout() {
-		Auth::clear('user');
+		Auth::clear('li3b_user');
 		FlashMessage::write('You\'ve successfully logged out.', array(), 'default');
 		$this->redirect('/');
 	}
