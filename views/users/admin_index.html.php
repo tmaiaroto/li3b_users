@@ -15,7 +15,7 @@
 			<tr>
 				<td>
 					<?php $active = ($user->active) ? 'active':'inactive'; ?>
-					<?=$this->html->link($user->email, array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'read', 'admin' => true, 'args' => array($user->_id)), array('class' => 'user-info', 'title' => $user->firstName . ' ' . $user->lastName . ' (' . $active . ')')); ?>
+					<?=$this->html->link($user->email, array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'read', 'admin' => null, 'args' => array($user->url)), array('class' => 'user-info', 'title' => $user->firstName . ' ' . $user->lastName . ' (' . $active . ')')); ?>
 				</td>
 				<td>
 					<?=$user->role; ?>
