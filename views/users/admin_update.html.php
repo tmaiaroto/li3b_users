@@ -1,8 +1,8 @@
 <?=$this->html->script('/li3b_users/js/bootstrapUserValidation', array('inline' => false)); ?>
 <div class="row">
 	<div class="span9">
-		<h2 id="page-heading">Create New User</h2>
-		
+		<h2 id="page-heading">Update User</h2>
+		<br />
 		<?=$this->form->create($document, array('id' => 'user-update-form', 'class' => 'form-horizontal', 'onSubmit' => 'return submitCheck();')); ?>
 			<fieldset>
 			<?=$this->security->requestToken(); ?>

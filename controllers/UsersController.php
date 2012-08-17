@@ -370,7 +370,7 @@ class UsersController extends \lithium\action\Controller {
 			$user_document = User::find('first', array('conditions' => array('_id' => $user['_id'])));
 			
 			if($user_document) {
-				$user_document->save(array('last_login_ip' => $_SERVER['REMOTE_ADDR'], 'last_login_time' => new MongoDate()));
+				$user_document->save(array('lastLoginIp' => $_SERVER['REMOTE_ADDR'], 'lastLoginTime' => new MongoDate()));
 			}
 			
 			// only set a flash message if this is a login. it could be a redirect from somewhere else that has restricted access
@@ -549,5 +549,128 @@ class UsersController extends \lithium\action\Controller {
 		return Util::uniqueUrl($options);
 	}
 	
+	/**
+	 * Allows a user to update their own profile.
+	 * 
+	 */
+	public function update() {
+		if(!$this->request->user) {
+			FlashMessage::write('You must be logged in to do that.', array(), 'default');
+			return $this->redirect('/');
+		}
+		
+		// Special rules for user creation (includes unique e-mail)
+		$rules = array(
+			'email' => array(
+				array('notEmpty', 'message' => 'E-mail cannot be empty.'),
+				array('email', 'message' => 'E-mail is not valid.'),
+				array('uniqueEmail', 'message' => 'Sorry, this e-mail address is already registered.'),
+			)
+		);
+		
+		// Get the document from the db to edit
+		$conditions = array('_id' => $this->request->user['_id']);
+		$document = User::find('first', array('conditions' => $conditions));
+		
+		// Redirect if invalid user...This should not be possible.
+		if(empty($document)) {
+			FlashMessage::write('You must be logged in to do that.', array(), 'default');
+			return $this->redirect('/');
+		}
+		
+		// If data was passed, set some more data and save
+		if ($this->request->data) {
+			// CSRF
+			if(!RequestToken::check($this->request)) {
+				RequestToken::get(array('regenerate' => true));
+			} else {
+				$now = new MongoDate();
+				$this->request->data['modified'] = $now;
+				
+				// Add validation rules for the password IF the password and password_confirm field were passed
+				if((isset($this->request->data['password']) && isset($this->request->data['passwordConfirm'])) &&
+					(!empty($this->request->data['password']) && !empty($this->request->data['passwordConfirm']))) {
+					$rules['password'] = array(
+						array('notEmpty', 'message' => 'Password cannot be empty.'),
+						array('notEmptyHash', 'message' => 'Password cannot be empty.'),
+						array('moreThanFive', 'message' => 'Password must be at least 6 characters long.')
+					);
+					
+					// ...and of course hash the password
+					$this->request->data['password'] = Password::hash($this->request->data['password']);
+				} else {
+					// Otherwise, set the password to the current password.
+					$this->request->data['password'] = $document->password;
+				}
+				// Ensure the unique e-mail validation rule doesn't get in the way when editing users
+				// So if the user being edited has the same e-mail address as the POST data...
+				// Change the e-mail validation rules
+				if(isset($this->request->data['email']) && $this->request->data['email'] == $document->email) {
+					$rules['email'] = array(
+						array('notEmpty', 'message' => 'E-mail cannot be empty.'),
+						array('email', 'message' => 'E-mail is not valid.')
+					);
+				}
+				
+				// Set the pretty URL that gets used by a lot of front-end actions.
+				// Pass the document _id so that it doesn't change the pretty URL on an update.
+				$this->request->data['url'] = $this->_generateUrl($document->_id);
+				
+				// Do not let roles or user active status to be adjusted via this method.
+				if(isset($this->request->data['role'])) {
+					unset($this->request->data['role']);
+				}
+				if(isset($this->request->data['active'])) {
+					unset($this->request->data['active']);
+				}
+				
+				// Save
+				if($document->save($this->request->data, array('validate' => $rules))) {
+					FlashMessage::write('You have successfully updated your user settings.', array(), 'default');
+					$this->redirect('/');
+				} else {
+					$this->request->data['password'] = '';
+					FlashMessage::write('There was an error trying to update your user settings, please try again.', array(), 'default');
+				}
+			}
+		}
+		
+		$this->set(compact('document'));
+	}
+	
+	/**
+	 * Public view action, for user profiles and such.
+	 * 
+	 * @param $url The user's pretty URL
+	 */
+	public function read($url=null) {
+		$conditions = array('url' => $url);
+		
+		/**
+		 * If nothing is passed, get the currently logged in user's profile.
+		 * This is safer to use for logged in users, because if they update
+		 * their profile and change their name...The pretty URL changes.
+		*/
+		if(empty($url) && isset($this->request->user)) {
+			$conditions = array('_id' => $this->request->user['_id']);
+		}
+		$user = User::find('first', array('conditions' => $conditions));
+		
+		
+		if(empty($user)) {
+			FlashMessage::write('Sorry, that user does not exist.', array(), 'default');
+			return $this->redirect('/');
+		}
+		
+		/**
+		 * Protect the password in case changes are made where this action
+		 * could be called with a handler like JSON or XML, etc. This way,
+		 * even if the user document is returned, it won't contain any
+		 * sensitive password information. Not even the _id.
+		 */
+		$user->set(array('password' => null, '_id' => null));
+
+		$this->set(compact('user'));
+	}
 }
 ?>
