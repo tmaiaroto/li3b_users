@@ -39,16 +39,17 @@
 						<p class="help-block">Just to be sure, type the password again.</p>
 					</div>
 				</div>
-				
+
 				<div class="form-actions">
 					<?=$this->form->submit('Save', array('class' => 'btn btn-primary')); ?> <?=$this->html->link('Cancel', array('library' => 'li3b_users', 'admin' => true, 'controller' => 'users', 'action' => 'index'), array('class' => 'btn')); ?>
 				</div>
-				
+
 			</fieldset>
 			<?=$this->form->end(); ?>
 	</div>
-	
+
 	<div class="span3">
+		<?=$this->bootstrapBlock->render('helloworld', array('foo' => 'bar')); ?>
 		<div class="well" style="padding: 8px 0;">
 			<div style="padding: 8px;">
 				<p>

@@ -19,7 +19,7 @@ class UsersController extends \lithium\action\Controller {
 
 	public function admin_index() {
 		$this->_render['layout'] = 'admin';
-		
+
 		$conditions = array();
 		// If a search query was provided, search all "searchable" fields (any field in the model's $search_schema property)
 		// NOTE: the values within this array for "search" include things like "weight" etc. and are not yet fully implemented...But will become more robust and useful.
@@ -39,28 +39,28 @@ class UsersController extends \lithium\action\Controller {
 				$conditions['$or'][] = array($field => $search_regex);
 			}
 		}
-		
+
 		$limit = $this->request->limit ?: 25;
 		$page = $this->request->page ?: 1;
 		$order = array('created' => 'desc');
 		$total = User::count(compact('conditions'));
 		$documents = User::all(compact('conditions','order','limit','page'));
-		
+
 		$page_number = (int)$page;
 		$total_pages = ((int)$limit > 0) ? ceil($total / $limit):0;
-		
+
 		// Set data for the view template
 		return compact('documents', 'total', 'page', 'limit', 'total_pages');
 	}
-	
+
 	/**
 	 * Allows admins to update users.
-	 * 
+	 *
 	 * @param string $id The user id
 	*/
 	public function admin_create() {
 		$this->_render['layout'] = 'admin';
-		
+
 		// Special rules for user creation (includes unique e-mail)
 		$rules = array(
 			'email' => array(
@@ -69,11 +69,11 @@ class UsersController extends \lithium\action\Controller {
 				array('uniqueEmail', 'message' => 'Sorry, this e-mail address is already registered.'),
 			)
 		);
-		
+
 		$roles = User::userRoles();
-		
+
 		$document = User::create();
-		
+
 		// If data was passed, set some more data and save
 		if ($this->request->data) {
 			// CSRF
@@ -83,7 +83,7 @@ class UsersController extends \lithium\action\Controller {
 				$now = new MongoDate();
 				$this->request->data['created'] = $now;
 				$this->request->data['modified'] = $now;
-				
+
 				// Add validation rules for the password IF the password and password_confirm field were passed
 				if((isset($this->request->data['password']) && isset($this->request->data['passwordConfirm'])) &&
 					(!empty($this->request->data['password']) && !empty($this->request->data['passwordConfirm']))) {
@@ -92,14 +92,14 @@ class UsersController extends \lithium\action\Controller {
 						array('notEmptyHash', 'message' => 'Password cannot be empty.'),
 						array('moreThanFive', 'message' => 'Password must be at least 6 characters long.')
 					);
-					
+
 					// ...and of course hash the password
 					$this->request->data['password'] = Password::hash($this->request->data['password']);
 				} else {
 					// Otherwise, set the password to the current password.
 					$this->request->data['password'] = $document->password;
 				}
-				
+
 				// Ensure the unique e-mail validation rule doesn't get in the way when editing users
 				// So if the user being edited has the same e-mail address as the POST data...
 				// Change the e-mail validation rules
@@ -109,10 +109,10 @@ class UsersController extends \lithium\action\Controller {
 						array('email', 'message' => 'E-mail is not valid.')
 					);
 				}
-				
+
 				// Set the pretty URL that gets used by a lot of front-end actions.
 				$this->request->data['url'] = $this->_generateUrl();
-				
+
 				// Save
 				if($document->save($this->request->data, array('validate' => $rules))) {
 					FlashMessage::write('The user has been created successfully.', array(), 'default');
@@ -123,18 +123,18 @@ class UsersController extends \lithium\action\Controller {
 				}
 			}
 		}
-		
+
 		$this->set(compact('document', 'roles'));
 	}
 
 	/**
 	 * Allows admins to update users.
-	 * 
+	 *
 	 * @param string $id The user id
 	*/
 	public function admin_update($id=null) {
 		$this->_render['layout'] = 'admin';
-		
+
 		// Special rules for user creation (includes unique e-mail)
 		$rules = array(
 			'email' => array(
@@ -143,19 +143,19 @@ class UsersController extends \lithium\action\Controller {
 				array('uniqueEmail', 'message' => 'Sorry, this e-mail address is already registered.'),
 			)
 		);
-		
+
 		$roles = User::userRoles();
-		
+
 		// Get the document from the db to edit
 		$conditions = array('_id' => $id);
 		$document = User::find('first', array('conditions' => $conditions));
-		
+
 		// Redirect if invalid user
 		if(empty($document)) {
 			FlashMessage::write('That user was not found.', array(), 'default');
 			return $this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
 		}
-		
+
 		// If data was passed, set some more data and save
 		if ($this->request->data) {
 			// CSRF
@@ -164,7 +164,7 @@ class UsersController extends \lithium\action\Controller {
 			} else {
 				$now = new MongoDate();
 				$this->request->data['modified'] = $now;
-				
+
 				// Add validation rules for the password IF the password and password_confirm field were passed
 				if((isset($this->request->data['password']) && isset($this->request->data['passwordConfirm'])) &&
 					(!empty($this->request->data['password']) && !empty($this->request->data['passwordConfirm']))) {
@@ -173,7 +173,7 @@ class UsersController extends \lithium\action\Controller {
 						array('notEmptyHash', 'message' => 'Password cannot be empty.'),
 						array('moreThanFive', 'message' => 'Password must be at least 6 characters long.')
 					);
-					
+
 					// ...and of course hash the password
 					$this->request->data['password'] = Password::hash($this->request->data['password']);
 				} else {
@@ -189,11 +189,11 @@ class UsersController extends \lithium\action\Controller {
 						array('email', 'message' => 'E-mail is not valid.')
 					);
 				}
-				
+
 				// Set the pretty URL that gets used by a lot of front-end actions.
 				// Pass the document _id so that it doesn't change the pretty URL on an update.
 				$this->request->data['url'] = $this->_generateUrl($document->_id);
-				
+
 				// Save
 				if($document->save($this->request->data, array('validate' => $rules))) {
 					FlashMessage::write('The user has been updated successfully.', array(), 'default');
@@ -204,28 +204,28 @@ class UsersController extends \lithium\action\Controller {
 				}
 			}
 		}
-		
+
 		$this->set(compact('document', 'roles'));
 	}
-	
+
 	/**
 	 * Allows admins to delete other users.
-	 * 
+	 *
 	 * @param string $id The user id
 	*/
 	public function admin_delete($id=null) {
 		$this->_render['layout'] = 'admin';
-		
+
 		// Get the document from the db to edit
 		$conditions = array('_id' => $id);
 		$document = User::find('first', array('conditions' => $conditions));
-		
+
 		// Redirect if invalid user
 		if(empty($document)) {
 			FlashMessage::write('That user was not found.', array(), 'default');
 			return $this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
 		}
-		
+
 		if($this->request->user['_id'] != (string) $document->_id) {
 			if($document->delete()) {
 				FlashMessage::write('The user has been deleted.', array(), 'default');
@@ -235,10 +235,10 @@ class UsersController extends \lithium\action\Controller {
 		} else {
 			FlashMessage::write('You can\'t delete yourself!', array(), 'default');
 		}
-		
+
 		return $this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
 	}
-	
+
 	/**
 	 * Registers a user.
 	*/
@@ -256,9 +256,9 @@ class UsersController extends \lithium\action\Controller {
 				array('moreThanFive', 'message' => 'Password must be at least 6 characters long.')
 			)
 		);
-		
+
 		$document = User::create();
-		
+
 		// Save
 		if ($this->request->data) {
 			// CSRF
@@ -268,22 +268,22 @@ class UsersController extends \lithium\action\Controller {
 				$now = new MongoDate();
 				$this->request->data['created'] = $now;
 				$this->request->data['modified'] = $now;
-				
+
 				$this->request->data['active'] = true;
-				
+
 				// Set the pretty URL that gets used by a lot of front-end actions.
 				$this->request->data['url'] = $this->_generateUrl();
-				
+
 				// Set the user's role...always hard coded and set.
 				$this->request->data['role'] = 'registered_user';
-				
+
 				// However, IF this is the first user ever created, then they will be an administrator.
 				$users = User::find('count');
 				if(empty($users)) {
 					$this->request->data['active'] = true;
 					$this->request->data['role'] = 'administrator';
 				}
-				
+
 				// Set the password, it has to be hashed
 				if((isset($this->request->data['password'])) && (!empty($this->request->data['password']))) {
 					$this->request->data['password'] = Password::hash($this->request->data['password']);
@@ -297,10 +297,10 @@ class UsersController extends \lithium\action\Controller {
 				}
 			}
 		}
-		
+
 		$this->set(compact('document'));
 	}
-	
+
 	/*
 	 * Also make the login method available to admin routing.
 	 * It can have a different template and layout if need be.
@@ -311,11 +311,11 @@ class UsersController extends \lithium\action\Controller {
 		$this->_render['template'] = 'login';
 		return $this->login();
 	}
-	
+
 	/**
 	 * Provides a login page for users to login.
-	 * 
-	 * @return type 
+	 *
+	 * @return type
 	*/
 	public function login() {
 		$user = Auth::check('li3b_user', $this->request);
@@ -323,7 +323,7 @@ class UsersController extends \lithium\action\Controller {
 		if (!Session::check('triedAuthRedirect', array('name' => 'cookie'))) {
 			Session::write('triedAuthRedirect', 'false', array('name' => 'cookie', 'expires' => '+1 hour'));
 		}
-		
+
 		// Facebook returns a session querystring... We don't want to show this to the user.
 		// Just redirect back so it ditches the querystring. If the user is logged in, then
 		// it will redirect like expected using the $url variable that has been set below.
@@ -333,11 +333,11 @@ class UsersController extends \lithium\action\Controller {
 		if(isset($_GET['session'])) {
 			$this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'login'));
 		}
-		
+
 		if ($user) {
 			// Users will be redirected after logging in, but where to?
 			$url = '/';
-			
+
 			// Default redirects for certain user roles
 			switch($user['role']) {
 				case 'administrator':
@@ -348,12 +348,12 @@ class UsersController extends \lithium\action\Controller {
 					$url = '/';
 					break;
 			}
-			
+
 			// Second, look to see if a cookie was set. The could have ended up at the login page
 			// because he/she tried to go to a restricted area. That URL was noted in a cookie.
 			if (Session::check('beforeAuthURL', array('name' => 'cookie'))) {
 				$url = Session::read('beforeAuthURL', array('name' => 'cookie'));
-				
+
 				// 'triedAuthRedirect' so we don't end up in a redirect loop
 				$triedAuthRedirect = Session::read('triedAuthRedirect', array('name' => 'cookie'));
 				if($triedAuthRedirect == 'true') {
@@ -362,17 +362,17 @@ class UsersController extends \lithium\action\Controller {
 				} else {
 					Session::write('triedAuthRedirect', 'true', array('name' => 'cookie', 'expires' => '+1 hour'));
 				}
-				
+
 				Session::delete('beforeAuthURL', array('name' => 'cookie'));
 			}
-			
+
 			// Save last login IP and time
 			$user_document = User::find('first', array('conditions' => array('_id' => $user['_id'])));
-			
+
 			if($user_document) {
 				$user_document->save(array('lastLoginIp' => $_SERVER['REMOTE_ADDR'], 'lastLoginTime' => new MongoDate()));
 			}
-			
+
 			// only set a flash message if this is a login. it could be a redirect from somewhere else that has restricted access
 			// $flash_message = FlashMessage::read('default');
 			// if(!isset($flash_message['message']) || empty($flash_message['message'])) {
@@ -385,10 +385,10 @@ class UsersController extends \lithium\action\Controller {
 			}
 		}
 		$data = $this->request->data;
-		
+
 		return compact('data');
 	}
-	
+
 	/**
 	 * Also make the login available to admin routing.
 	*/
@@ -404,10 +404,10 @@ class UsersController extends \lithium\action\Controller {
 		FlashMessage::write('You\'ve successfully logged out.', array(), 'default');
 		$this->redirect('/');
 	}
-	
+
 	/**
 	 * Checks to see if an e-mail address is already in use.
-	 *  
+	 *
 	 */
 	public function email_check($email=null) {
 		$this->_render = false;
@@ -416,7 +416,7 @@ class UsersController extends \lithium\action\Controller {
 		}
 		echo User::find('count', array('conditions' => array('email' => $email)));
 	}
-	
+
 	/**
 	 * Change a user password.
 	 * This is a method that you request via AJAX.
@@ -429,24 +429,24 @@ class UsersController extends \lithium\action\Controller {
 		if(!$record) {
 			return array('error' => true, 'response' => 'User record not found.');
 		}
-		
+
 		$user = Auth::check('li3b_user');
 		if(!$user) {
 			return array('error' => true, 'response' => 'You must be logged in to change your password.');
 		}
-		
+
 		$record_data = $record->data();
 		if($user['_id'] != $record_data['_id']) {
 			return array('error' => true, 'response' => 'You can only change your own password.');
 		}
-		
+
 		// Update the record
 		if ($this->request->data) {
 			// Make sure the password matches the confirmation
 			if($this->request->data['password'] != $this->request->data['password_confirm']) {
 				return array('error' => true, 'response' => 'You must confirm your password change by typing it again in the confirm box.');
 			}
-			
+
 			// Call save from the User model
 			if($record->save($this->request->data)) {
 				return array('error' => false, 'response' => 'Password has been updated successfully.');
@@ -457,62 +457,62 @@ class UsersController extends \lithium\action\Controller {
 			return array('error' => true, 'response' => 'You must pass the proper data to change your password and you can\'t call this URL directly.');
 		}
 	}
-	
+
 	/**
 	 * Enables/disables the user.
 	 * This method should be called via AJAX.
-	 * 
+	 *
 	 * @param string $id The user's MongoId
 	 * @param mixed $active What to set the active field to. 1 = true and 0 = false, 'false' = false too
 	 * @return boolean Success
 	*/
 	public function admin_set_status($id=null, $active=true) {
 		$this->_render['layout'] = 'admin';
-		
+
 		// Do our best here
 		if($active == 'false') {
 			$active = false;
 		} else {
 			$active = (bool) $active;
 		}
-		
+
 		// Only allow this method to be called via JSON
 		if(!$this->request->is('json')) {
 			return array('success' => false);
 		}
-		
+
 		$requested_user = User::find('first', array('conditions' => array('_id' => $id)));
-		
+
 		$current_user = Auth::check('li3b_user');
-		
+
 		// Don't allow a user to make themself active or inactive.
 		if((string)$request_user->_id == $current_user['_id']) {
 			return array('success' => false);
 		}
-		
+
 		if(User::update(
 			// query
 			array(
 				'$set' => array(
 					'active' => $active
 				)
-			), 
+			),
 			// conditions
 			array(
 				'_id' => $requested_user->_id
-			), 
+			),
 			array('atomic' => false)
 		)) {
 			return array('success' => true);
 		}
-		
+
 		// Otherwise, return false. Who knows why, but don't do anything.
 		return array('success' => false);
 	}
-	
+
 	/**
 	 * Generates a pretty URL for the user document.
-	 * 
+	 *
 	 * @return string
 	 */
 	private function _generateUrl($id=null) {
@@ -548,17 +548,17 @@ class UsersController extends \lithium\action\Controller {
 		}
 		return Util::uniqueUrl($options);
 	}
-	
+
 	/**
 	 * Allows a user to update their own profile.
-	 * 
+	 *
 	 */
 	public function update() {
 		if(!$this->request->user) {
 			FlashMessage::write('You must be logged in to do that.', array(), 'default');
 			return $this->redirect('/');
 		}
-		
+
 		// Special rules for user creation (includes unique e-mail)
 		$rules = array(
 			'email' => array(
@@ -567,17 +567,17 @@ class UsersController extends \lithium\action\Controller {
 				array('uniqueEmail', 'message' => 'Sorry, this e-mail address is already registered.'),
 			)
 		);
-		
+
 		// Get the document from the db to edit
 		$conditions = array('_id' => $this->request->user['_id']);
 		$document = User::find('first', array('conditions' => $conditions));
-		
+
 		// Redirect if invalid user...This should not be possible.
 		if(empty($document)) {
 			FlashMessage::write('You must be logged in to do that.', array(), 'default');
 			return $this->redirect('/');
 		}
-		
+
 		// If data was passed, set some more data and save
 		if ($this->request->data) {
 			// CSRF
@@ -586,7 +586,7 @@ class UsersController extends \lithium\action\Controller {
 			} else {
 				$now = new MongoDate();
 				$this->request->data['modified'] = $now;
-				
+
 				// Add validation rules for the password IF the password and password_confirm field were passed
 				if((isset($this->request->data['password']) && isset($this->request->data['passwordConfirm'])) &&
 					(!empty($this->request->data['password']) && !empty($this->request->data['passwordConfirm']))) {
@@ -595,7 +595,7 @@ class UsersController extends \lithium\action\Controller {
 						array('notEmptyHash', 'message' => 'Password cannot be empty.'),
 						array('moreThanFive', 'message' => 'Password must be at least 6 characters long.')
 					);
-					
+
 					// ...and of course hash the password
 					$this->request->data['password'] = Password::hash($this->request->data['password']);
 				} else {
@@ -611,11 +611,11 @@ class UsersController extends \lithium\action\Controller {
 						array('email', 'message' => 'E-mail is not valid.')
 					);
 				}
-				
+
 				// Set the pretty URL that gets used by a lot of front-end actions.
 				// Pass the document _id so that it doesn't change the pretty URL on an update.
 				$this->request->data['url'] = $this->_generateUrl($document->_id);
-				
+
 				// Do not let roles or user active status to be adjusted via this method.
 				if(isset($this->request->data['role'])) {
 					unset($this->request->data['role']);
@@ -623,7 +623,7 @@ class UsersController extends \lithium\action\Controller {
 				if(isset($this->request->data['active'])) {
 					unset($this->request->data['active']);
 				}
-				
+
 				// Save
 				if($document->save($this->request->data, array('validate' => $rules))) {
 					FlashMessage::write('You have successfully updated your user settings.', array(), 'default');
@@ -634,18 +634,18 @@ class UsersController extends \lithium\action\Controller {
 				}
 			}
 		}
-		
+
 		$this->set(compact('document'));
 	}
-	
+
 	/**
 	 * Public view action, for user profiles and such.
-	 * 
+	 *
 	 * @param $url The user's pretty URL
 	 */
 	public function read($url=null) {
 		$conditions = array('url' => $url);
-		
+
 		/**
 		 * If nothing is passed, get the currently logged in user's profile.
 		 * This is safer to use for logged in users, because if they update
@@ -655,13 +655,12 @@ class UsersController extends \lithium\action\Controller {
 			$conditions = array('_id' => $this->request->user['_id']);
 		}
 		$user = User::find('first', array('conditions' => $conditions));
-		
-		
+
 		if(empty($user)) {
 			FlashMessage::write('Sorry, that user does not exist.', array(), 'default');
 			return $this->redirect('/');
 		}
-		
+
 		/**
 		 * Protect the password in case changes are made where this action
 		 * could be called with a handler like JSON or XML, etc. This way,
