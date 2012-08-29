@@ -49,7 +49,7 @@
 	</div>
 
 	<div class="span3">
-		<?=$this->bootstrapBlock->render('helloworld', array('foo' => 'bar')); ?>
+		<?=$this->bootstrapBlock->render('li3b_users_update_right', array('document' => $document)); ?>
 		<div class="well" style="padding: 8px 0;">
 			<div style="padding: 8px;">
 				<p>
