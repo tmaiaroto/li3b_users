@@ -9,7 +9,7 @@
 				<div class="control-group">
 					<?=$this->form->label('UserProfilePicture', 'Profile Picture', array('class' => 'control-label')); ?>
 					<div class="controls">
-						<?php echo $document->profilePicture ? $this->html->image('/profilepic/' . $document->profilePicture, array('style' => 'width: 50px; height: 50px;')):$this->html->image('/li3b_users/img/default-profile-picture.png', array('style' => 'width: 50px; height: 50px;')); ?>
+						<?php echo $document->profilePicture ? $this->html->image('/profilepic/' . $document->profilePicture, array('style' => 'width: 150px; height: 150px;')):$this->html->image('/li3b_users/img/default-profile-picture.png', array('style' => 'width: 150px; height: 150px;')); ?>
 						<?=$this->form->field('profilePicture', array('label' => false, 'type' => 'file', 'class' => 'input-xlarge')); ?>
 					</div>
 				</div>
