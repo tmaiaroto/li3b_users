@@ -3,9 +3,16 @@
 	<div class="span9">
 		<h2 id="page-heading">Your User Settings</h2>
 		<br />
-		<?=$this->form->create($document, array('id' => 'user-update-form', 'class' => 'form-horizontal', 'onSubmit' => 'return submitCheck();')); ?>
+		<?=$this->form->create($document, array('id' => 'user-update-form', 'type' => 'file', 'class' => 'form-horizontal', 'onSubmit' => 'return submitCheck();')); ?>
 			<fieldset>
 			<?=$this->security->requestToken(); ?>
+				<div class="control-group">
+					<?=$this->form->label('UserProfilePicture', 'Profile Picture', array('class' => 'control-label')); ?>
+					<div class="controls">
+						<?php echo $document->profilePicture ? $this->html->image('/profilepic/' . $document->profilePicture, array('style' => 'width: 50px; height: 50px;')):$this->html->image('/li3b_users/img/default-profile-picture.png', array('style' => 'width: 50px; height: 50px;')); ?>
+						<?=$this->form->field('profilePicture', array('label' => false, 'type' => 'file', 'class' => 'input-xlarge')); ?>
+					</div>
+				</div>
 				<div class="control-group">
 					<?=$this->form->label('UserFirstName', 'First Name', array('class' => 'control-label')); ?>
 					<div class="controls">

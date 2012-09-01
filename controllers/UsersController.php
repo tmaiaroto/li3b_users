@@ -2,6 +2,7 @@
 namespace li3b_users\controllers;
 
 use li3b_users\models\User;
+use li3b_users\models\Asset;
 use li3b_core\util\Util;
 use li3_flash_message\extensions\storage\FlashMessage;
 use li3_access\security\Access;
@@ -571,6 +572,7 @@ class UsersController extends \lithium\action\Controller {
 		// Get the document from the db to edit
 		$conditions = array('_id' => $this->request->user['_id']);
 		$document = User::find('first', array('conditions' => $conditions));
+		$existingProfilePic = !empty($document->profilePicture) ? $document->profilePicture:false;
 
 		// Redirect if invalid user...This should not be possible.
 		if(empty($document)) {
@@ -624,10 +626,62 @@ class UsersController extends \lithium\action\Controller {
 					unset($this->request->data['active']);
 				}
 
+				// Profile Picture
+				if(isset($this->request->data['profilePicture']['error']) && $this->request->data['profilePicture']['error'] == UPLOAD_ERR_OK) {
+
+					$rules['profilePicture'] = array(
+						array('notTooLarge', 'message' => 'Profile picture cannot be larger than 250px in either dimension.'),
+						array('invalidFileType', 'message' => 'Profile picture must be a jpg, png, or gif image.')
+					);
+
+					list($width, $height) = getimagesize($this->request->data['profilePicture']['tmp_name']);
+					// Check file dimensions first.
+					// TODO: Maybe make this configurable.
+					if($width > 250 || $height > 250) {
+						$this->request->data['profilePicture'] = 'TOO_LARGE.jpg';
+					} else {
+						// Save file to gridFS
+						$ext = substr(strrchr($this->request->data['profilePicture']['name'], '.'), 1);
+						switch(strtolower($ext)) {
+							case 'jpg':
+							case 'jpeg':
+							case 'png':
+							case 'gif':
+							case 'png':
+								$gridFile = Asset::create(array('file' => $this->request->data['profilePicture']['tmp_name'], 'filename' => (string)uniqid(php_uname('n') . '.') . '.'.$ext, 'fileExt' => $ext));
+								$gridFile->save();
+							break;
+							default:
+								$this->request->data['profilePicture'] = 'INVALID_FILE_TYPE.jpg';
+								//exit();
+							break;
+						}
+
+						// If file saved, set the field to associate it (and remove the old one - gotta keep it clean).
+						if (isset($gridFile) && $gridFile->_id) {
+							if($existingProfilePic && substr($existingProfilePic, 0, 4) != 'http') {
+								$existingProfilePicId = substr($existingProfilePic, 0, -(strlen(strrchr($existingProfilePic, '.'))));
+								// Once last check...This REALLY can't be empty, otherwise it would remove ALL assets!
+								if(!empty($existingProfilePicId)) {
+									Asset::remove(array('_id' => $existingProfilePicId));
+								}
+							}
+							// TODO: Maybe allow saving to disk or S3 or CloudFiles or something. Maybe.
+							$this->request->data['profilePicture'] = (string)$gridFile->_id . '.' . $ext;
+						} else {
+							if($this->request->data['profilePicture'] != 'INVALID_FILE_TYPE.jpg') {
+								$this->request->data['profilePicture'] = null;
+							}
+						}
+					}
+				} else {
+					$this->request->data['profilePicture'] = null;
+				}
+
 				// Save
 				if($document->save($this->request->data, array('validate' => $rules))) {
 					FlashMessage::write('You have successfully updated your user settings.', array(), 'default');
-					$this->redirect('/');
+					$this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'update'));
 				} else {
 					$this->request->data['password'] = '';
 					FlashMessage::write('There was an error trying to update your user settings, please try again.', array(), 'default');
