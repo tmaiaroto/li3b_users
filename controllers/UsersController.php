@@ -693,6 +693,72 @@ class UsersController extends \lithium\action\Controller {
 	}
 
 	/**
+	 * Allows the user to set their profile picture from a URL.
+	 * This is a very useful method because users can then easily use
+	 * their profile pictures from other sites, etc.
+	 * It's separate from the update() action so it can be called
+	 * from a variety of places. Namely, from libraries that make
+	 * use of social media networks. This would allow a user to use
+	 * their Facebook profile picture for example by going to a Facebook
+	 * library of some sort.
+	 *
+	 * This is a JSON method, meant for use with JavaScript on the front-end.
+	 *
+	 * Note: The user must be logged in to do this, but this may make
+	 * for a good API method in the future - allowing other apps/sites
+	 * to set the user's profile picture on this one.
+	 */
+	public function set_profile_picture_from_url() {
+		$response = array('success' => false, 'result' => null);
+		if(!$this->request->is('json')) {
+			return json_encode($response);
+		}
+
+		if(!$this->request->user || !isset($this->request->data['url'])) {
+			return $response;
+		}
+
+		// Don't allow the URL to be used if it returns a 404.
+		$ch = curl_init($this->request->data['url']);
+		curl_setopt($ch,  CURLOPT_RETURNTRANSFER, TRUE);
+		$response = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+		if($httpCode == 404) {
+		    return $response;
+		}
+
+		$conditions = array('_id' => new MongoId($this->request->user['_id']));
+
+		// Remove the existing image from the database (keep things tidy).
+		$document = User::find('first', array('conditions' => $conditions));
+		$existingProfilePicId = false;
+		if(isset($document->profilePicture) && substr($document->profilePicture, 0, 4) != 'http') {
+			$existingProfilePicId = substr($document->profilePicture, 0, -(strlen(strrchr($document->profilePicture, '.'))));
+		}
+
+		// Update the user document.
+		if(User::update(
+			// query
+			array(
+				'$set' => array(
+					'profilePicture' => $this->request->data['url']
+				)
+			),
+			$conditions,
+			array('atomic' => false)
+		)) {
+			// A final check to ensure there actually is an id.
+			if(!empty($existingProfilePicId)) {
+				Asset::remove(array('_id' => $existingProfilePicId));
+			}
+			$response = array('success' => true, 'result' => $this->request->data['url']);
+		}
+
+		return $response;
+	}
+
+	/**
 	 * Public view action, for user profiles and such.
 	 *
 	 * @param $url The user's pretty URL

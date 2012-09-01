@@ -9,8 +9,19 @@
 				<div class="control-group">
 					<?=$this->form->label('UserProfilePicture', 'Profile Picture', array('class' => 'control-label')); ?>
 					<div class="controls">
-						<?php echo $document->profilePicture ? $this->html->image('/profilepic/' . $document->profilePicture, array('style' => 'width: 150px; height: 150px;')):$this->html->image('/li3b_users/img/default-profile-picture.png', array('style' => 'width: 150px; height: 150px;')); ?>
+						<?php
+						if($document->profilePicture) {
+							if(substr($document->profilePicture, 0, 4) == 'http') {
+								echo $this->html->image($document->profilePicture, array('id' => 'profile-picture-preview', 'style' => 'width: 150px; height: 150px;'));
+							} else {
+								echo $this->html->image('/profilepic/' . $document->profilePicture, array('id' => 'profile-picture-preview', 'style' => 'width: 150px; height: 150px;'));
+							}
+						} else {
+							echo $this->html->image('/li3b_users/img/default-profile-picture.png', array('id' => 'profile-picture-preview', 'style' => 'width: 150px; height: 150px;'));
+						}
+						?>
 						<?=$this->form->field('profilePicture', array('label' => false, 'type' => 'file', 'class' => 'input-xlarge')); ?>
+						<p>Change by uploading a new image (no larger than 250x250px).</p>
 					</div>
 				</div>
 				<div class="control-group">
