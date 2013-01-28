@@ -116,11 +116,11 @@ class UsersController extends \lithium\action\Controller {
 
 				// Save
 				if($document->save($this->request->data, array('validate' => $rules))) {
-					FlashMessage::write('The user has been created successfully.', array(), 'default');
+					FlashMessage::write('The user has been created successfully.', 'default');
 					$this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
 				} else {
 					$this->request->data['password'] = '';
-					FlashMessage::write('The user could not be created, please try again.', array(), 'default');
+					FlashMessage::write('The user could not be created, please try again.', 'default');
 				}
 			}
 		}
@@ -153,7 +153,7 @@ class UsersController extends \lithium\action\Controller {
 
 		// Redirect if invalid user
 		if(empty($document)) {
-			FlashMessage::write('That user was not found.', array(), 'default');
+			FlashMessage::write('That user was not found.', 'default');
 			return $this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
 		}
 
@@ -197,11 +197,11 @@ class UsersController extends \lithium\action\Controller {
 
 				// Save
 				if($document->save($this->request->data, array('validate' => $rules))) {
-					FlashMessage::write('The user has been updated successfully.', array(), 'default');
+					FlashMessage::write('The user has been updated successfully.', 'default');
 					$this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
 				} else {
 					$this->request->data['password'] = '';
-					FlashMessage::write('The user could not be updated, please try again.', array(), 'default');
+					FlashMessage::write('The user could not be updated, please try again.', 'default');
 				}
 			}
 		}
@@ -223,18 +223,18 @@ class UsersController extends \lithium\action\Controller {
 
 		// Redirect if invalid user
 		if(empty($document)) {
-			FlashMessage::write('That user was not found.', array(), 'default');
+			FlashMessage::write('That user was not found.', 'default');
 			return $this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
 		}
 
 		if($this->request->user['_id'] != (string) $document->_id) {
 			if($document->delete()) {
-				FlashMessage::write('The user has been deleted.', array(), 'default');
+				FlashMessage::write('The user has been deleted.', 'default');
 			} else {
-				FlashMessage::write('The could not be deleted, please try again.', array(), 'default');
+				FlashMessage::write('The could not be deleted, please try again.', 'default');
 			}
 		} else {
-			FlashMessage::write('You can\'t delete yourself!', array(), 'default');
+			FlashMessage::write('You can\'t delete yourself!', 'default');
 		}
 
 		return $this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'index', 'admin' => true));
@@ -291,7 +291,7 @@ class UsersController extends \lithium\action\Controller {
 				}
 
 				if($document->save($this->request->data, array('validate' => $rules))) {
-					FlashMessage::write('User registration successful.', array(), 'default');
+					FlashMessage::write('User registration successful.', 'default');
 					$this->redirect('/');
 				} else {
 					$this->request->data['password'] = '';
@@ -377,12 +377,12 @@ class UsersController extends \lithium\action\Controller {
 			// only set a flash message if this is a login. it could be a redirect from somewhere else that has restricted access
 			// $flash_message = FlashMessage::read('default');
 			// if(!isset($flash_message['message']) || empty($flash_message['message'])) {
-				FlashMessage::write('You\'ve successfully logged in.', array(), 'default');
+				FlashMessage::write('You\'ve successfully logged in.', 'default');
 			// }
 			$this->redirect($url);
 		} else {
 			if($this->request->data) {
-				FlashMessage::write('You entered an incorrect username and/or password.', array(), 'default');
+				FlashMessage::write('You entered an incorrect username and/or password.', 'default');
 			}
 		}
 		$data = $this->request->data;
@@ -402,7 +402,7 @@ class UsersController extends \lithium\action\Controller {
 	*/
 	public function logout() {
 		Auth::clear('li3b_user');
-		FlashMessage::write('You\'ve successfully logged out.', array(), 'default');
+		FlashMessage::write('You\'ve successfully logged out.', 'default');
 		$this->redirect('/');
 	}
 
@@ -556,7 +556,7 @@ class UsersController extends \lithium\action\Controller {
 	 */
 	public function update() {
 		if(!$this->request->user) {
-			FlashMessage::write('You must be logged in to do that.', array(), 'default');
+			FlashMessage::write('You must be logged in to do that.', 'default');
 			return $this->redirect('/');
 		}
 
@@ -576,7 +576,7 @@ class UsersController extends \lithium\action\Controller {
 
 		// Redirect if invalid user...This should not be possible.
 		if(empty($document)) {
-			FlashMessage::write('You must be logged in to do that.', array(), 'default');
+			FlashMessage::write('You must be logged in to do that.', 'default');
 			return $this->redirect('/');
 		}
 
@@ -680,11 +680,11 @@ class UsersController extends \lithium\action\Controller {
 
 				// Save
 				if($document->save($this->request->data, array('validate' => $rules))) {
-					FlashMessage::write('You have successfully updated your user settings.', array(), 'default');
+					FlashMessage::write('You have successfully updated your user settings.', 'default');
 					$this->redirect(array('library' => 'li3b_users', 'controller' => 'users', 'action' => 'update'));
 				} else {
 					$this->request->data['password'] = '';
-					FlashMessage::write('There was an error trying to update your user settings, please try again.', array(), 'default');
+					FlashMessage::write('There was an error trying to update your user settings, please try again.', 'default');
 				}
 			}
 		}
@@ -777,7 +777,7 @@ class UsersController extends \lithium\action\Controller {
 		$user = User::find('first', array('conditions' => $conditions));
 
 		if(empty($user)) {
-			FlashMessage::write('Sorry, that user does not exist.', array(), 'default');
+			FlashMessage::write('Sorry, that user does not exist.', 'default');
 			return $this->redirect('/');
 		}
 

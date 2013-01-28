@@ -30,7 +30,7 @@ Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
 	if($request->admin === true && $action != 'login' && $action != 'logout') {
 		$action_access = Access::check('default', $user, $request, array('rules' => array('allowManagers')));
 		if(!empty($action_access)) {
-			FlashMessage::write($action_access['message'], array(), 'default');
+			FlashMessage::write($action_access['message'], 'default');
 			if($user) {
 				header('Location: ' . Router::match($action_access['redirect']));
 			} else {
