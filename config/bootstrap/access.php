@@ -22,6 +22,10 @@ if(!class_exists('li3_access\security\Access')) {
 }
 
 Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
+	// Run other filters first. This allows this one to not exactly be overwritten or excluded...But it does allow for a different login action to be used...
+	// TODO: Perhaps allow this to be skipped...
+	$next = $chain->next($self, $params, $chain);
+	
 	$request = $params['request'];
 	$action = $request->action;
 	$user = Auth::check('li3b_user');
@@ -44,7 +48,8 @@ Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
 	// Sets the current user in each request for convenience.
 	$params['request']->user = $user;
 	
-	return $chain->next($self, $params, $chain);
+	return $next;
+	// return $chain->next($self, $params, $chain);
 });
 
 Access::config(array(
