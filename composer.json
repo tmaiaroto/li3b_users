@@ -1,0 +1,19 @@
+{
+        "name": "tmaiaroto/li3b_users",
+        "type": "lithium-library",
+        "description": "A core library, using li3b_core, for user authentication.",
+        "keywords": ["lithium", "bootstrap", "li3b", "li3b_users", "blackprint"],
+        "homepage": "http://github.com/tmaiaroto/li3b_users",
+        "license": "MIT License",
+        "authors": [
+                {
+                        "name": "Shift8Creative",
+                        "homepage": "http://www.shift8creative.com"
+                }
+        ],
+        "require": {
+                "composer/installers": "*",
+                "tmaiaroto/li3_access": "dev-master",
+                "tmaiaroto/li3b_core": "dev-master"
+        }
+}
